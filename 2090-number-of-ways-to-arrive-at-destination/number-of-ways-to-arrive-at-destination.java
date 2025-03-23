@@ -1,48 +1,44 @@
 class Solution {
     public int countPaths(int n, int[][] roads) {
-        List<List<int[]>> graph = new ArrayList<>();
-        for (int i = 0; i < n; i++) {
-            graph.add(new ArrayList<>());
+        final long inf = Long.MAX_VALUE / 2;
+        final int mod = (int) 1e9 + 7;
+        long[][] g = new long[n][n];
+        for (var e : g) {
+            Arrays.fill(e, inf);
         }
-        
-        for (int[] road : roads) {
-            int u = road[0], v = road[1], time = road[2];
-            graph.get(u).add(new int[]{v, time});
-            graph.get(v).add(new int[]{u, time});
+        for (var r : roads) {
+            int u = r[0], v = r[1], t = r[2];
+            g[u][v] = t;
+            g[v][u] = t;
         }
-
+        g[0][0] = 0;
         long[] dist = new long[n];
-        int[] ways = new int[n];
-        Arrays.fill(dist, Long.MAX_VALUE);
+        Arrays.fill(dist, inf);
         dist[0] = 0;
-        ways[0] = 1;
-
-        PriorityQueue<long[]> pq = new PriorityQueue<>(Comparator.comparingLong(a -> a[0]));
-        pq.offer(new long[]{0, 0});
-
-        int MOD = 1_000_000_007;
-
-        while (!pq.isEmpty()) {
-            long[] curr = pq.poll();
-            long d = curr[0];
-            int node = (int) curr[1];
-
-            if (d > dist[node]) continue;
-
-            for (int[] neighbor : graph.get(node)) {
-                int nextNode = neighbor[0];
-                int time = neighbor[1];
-
-                if (dist[node] + time < dist[nextNode]) {
-                    dist[nextNode] = dist[node] + time;
-                    ways[nextNode] = ways[node];
-                    pq.offer(new long[]{dist[nextNode], nextNode});
-                } else if (dist[node] + time == dist[nextNode]) {
-                    ways[nextNode] = (ways[nextNode] + ways[node]) % MOD;
+        long[] f = new long[n];
+        f[0] = 1;
+        boolean[] vis = new boolean[n];
+        for (int i = 0; i < n; i++) {
+            int t = -1;
+            for (int j = 0; j < n; j++) {
+                if (!vis[j] && (t == -1 || dist[j] < dist[t])) {
+                    t = j;
+                }
+            }
+            vis[t] = true;
+            for (int j = 0; j < n; j++) {
+                if (j == t) {
+                    continue;
+                }
+                long ne = dist[t] + g[t][j];
+                if (dist[j] > ne) {
+                    dist[j] = ne;
+                    f[j] = f[t];
+                } else if (dist[j] == ne) {
+                    f[j] = (f[j] + f[t]) % mod;
                 }
             }
         }
-
-        return ways[n - 1];
+        return (int) f[n - 1];
     }
 }
